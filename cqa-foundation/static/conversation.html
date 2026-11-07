@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conversation · CQA</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="bar">
+  <h1 id="title">Conversation</h1>
+  <nav><a href="index.html">← Conversations</a><a href="accuracy.html">Accuracy</a><a href="studio.html">Criterion Studio</a></nav>
+  <span class="spacer"></span>
+  <label class="small">Checklist
+    <select id="checklist">
+      <option value="">Auto (by channel)</option>
+      <option value="official-chat">official-chat</option>
+      <option value="official-voice">official-voice</option>
+    </select>
+  </label>
+  <button type="button" id="btn-eval" class="primary">Evaluate</button>
+  <span id="busy" class="small"></span>
+</header>
+<p id="notice" class="notice" aria-live="polite"></p>
+
+<main class="grid">
+  <section class="panel transcript" aria-label="Transcript">
+    <audio id="audio" controls hidden preload="none"></audio>
+    <div id="messages"></div>
+  </section>
+
+  <section aria-label="Evaluation">
+    <div class="panel">
+      <div class="head">
+        <div><div class="small">Final score</div><div id="score" class="big">—</div></div>
+        <div id="meta" class="small"></div>
+      </div>
+      <div id="violations" class="violations" hidden></div>
+      <details id="ledger-box"><summary>Score ledger and history</summary>
+        <table class="ledger"><thead><tr><th>Criterion</th><th>Verdict</th><th>Source</th><th>Weight</th><th>Eff. weight</th><th>Points</th></tr></thead>
+          <tbody id="ledger"></tbody></table>
+        <p id="history" class="small"></p>
+      </details>
+    </div>
+    <div id="cards"></div>
+  </section>
+</main>
+<script src="conversation.js" defer></script>
+</body>
+</html>

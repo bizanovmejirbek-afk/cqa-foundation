@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accuracy · CQA</title>
+<link rel="stylesheet" href="app.css">
+<style>
+  .kpis { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .kpi { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 14px; min-width:150px; }
+  .kpi .n { font-size:26px; font-weight:800; } .kpi .l { font-size:12px; color:var(--muted); }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  @media (max-width:900px) { .two { grid-template-columns:1fr; } }
+  .bar-cell { position:relative; min-width:160px; }
+  .bar-fill { height:10px; border-radius:5px; background:var(--accent); }
+  h2 { font-size:15px; margin:8px 0; }
+  td, th { white-space:normal; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <h1>Accuracy vs reference</h1>
+  <nav><a href="index.html">← Conversations</a><a href="studio.html">Criterion Studio</a></nav>
+  <span class="spacer"></span>
+  <button type="button" id="btn-refresh">Refresh</button>
+</header>
+<p id="notice" class="notice" aria-live="polite"></p>
+<main class="wrap">
+  <p class="small">Compares the AI's own verdicts (before human review) with the reference labels in <code>eval/gold.json</code>.
+    The reference labels are a team-made gold set, not the organisers' Ground Truth.</p>
+  <div id="kpis" class="kpis"></div>
+  <div class="two">
+    <section><h2>By criterion</h2><table><thead><tr><th>Criterion</th><th>Accuracy</th><th></th><th>n</th></tr></thead><tbody id="crit"></tbody></table></section>
+    <section><h2>By language</h2><table><thead><tr><th>Language</th><th>Accuracy</th><th></th><th>n</th></tr></thead><tbody id="lang"></tbody></table></section>
+  </div>
+  <h2>Mismatches (click to open the conversation)</h2>
+  <table><thead><tr><th>Conversation</th><th>Criterion</th><th>Reference</th><th>AI</th><th>Lang</th></tr></thead><tbody id="mis"></tbody></table>
+</main>
+<script src="accuracy.js" defer></script>
+</body>
+</html>

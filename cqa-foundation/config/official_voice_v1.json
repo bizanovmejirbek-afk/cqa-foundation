@@ -1,0 +1,226 @@
+{
+  "name": "CQA Voice Call Checklist (adapted)",
+  "channel": "voice",
+  "criteria": [
+    {
+      "id": "c1_contact",
+      "name": "Establishing contact",
+      "definition": "The operator greeted the customer in the customer's language and introduced themselves in the first response.",
+      "kind": "binary",
+      "weight": 10,
+      "options": [
+        {
+          "value": "YES",
+          "points": 1,
+          "definition": "Greeted in the customer's language and introduced themselves in the first operator response."
+        },
+        {
+          "value": "NO",
+          "points": 0,
+          "definition": "Failed to properly greet or introduce themselves."
+        }
+      ],
+      "na_allowed": false,
+      "sub_checks": [
+        {
+          "id": "greeted",
+          "question": "Does the first OPERATOR message contain a greeting?"
+        },
+        {
+          "id": "introduced",
+          "question": "Does the first OPERATOR message contain the operator's name or self-introduction?"
+        },
+        {
+          "id": "client_language",
+          "question": "Is the first OPERATOR message in the same language the client used?"
+        }
+      ],
+      "sub_check_rule": "all",
+      "pass_value": "YES",
+      "fail_value": "NO",
+      "section": "Opening"
+    },
+    {
+      "id": "c2_needs",
+      "name": "Identifying customer needs",
+      "definition": "The operator considered the information already provided by the customer and clarified missing information before answering.",
+      "kind": "binary",
+      "weight": 15,
+      "options": [
+        {
+          "value": "YES",
+          "points": 1,
+          "definition": "Considered given information and clarified missing information before answering."
+        },
+        {
+          "value": "NO",
+          "points": 0,
+          "definition": "Failed to clarify important missing information when clarification was necessary."
+        }
+      ],
+      "na_allowed": true,
+      "na_condition": "the information already available was sufficient to answer the customer's request",
+      "section": "Needs"
+    },
+    {
+      "id": "c3_identification",
+      "name": "Identification",
+      "definition": "Customer identity verification was completed before disclosing protected information or performing a protected action.",
+      "kind": "binary",
+      "weight": 20,
+      "options": [
+        {
+          "value": "YES",
+          "points": 1,
+          "definition": "Verification completed before the protected disclosure or action (check message order)."
+        },
+        {
+          "value": "NO",
+          "points": 0,
+          "definition": "Verification was required but not confirmed before the protected action or disclosure."
+        }
+      ],
+      "na_allowed": true,
+      "na_condition": "the customer's request did not require identity verification (e.g. a general question about tariffs)",
+      "section": "Security"
+    },
+    {
+      "id": "c4_consultation",
+      "name": "Correct and complete consultation",
+      "definition": "Correctness and completeness of the operator's consultation.",
+      "kind": "scale",
+      "weight": 20,
+      "options": [
+        {
+          "value": "20",
+          "points": 20,
+          "definition": "All important questions were answered, or an appropriate next step was provided."
+        },
+        {
+          "value": "15",
+          "points": 15,
+          "definition": "The main question was resolved, but a secondary detail was missed."
+        },
+        {
+          "value": "10",
+          "points": 10,
+          "definition": "Only part of the request was resolved; an important question remained unanswered."
+        },
+        {
+          "value": "5",
+          "points": 5,
+          "definition": "General guidance was provided, but the customer still does not understand what to do."
+        },
+        {
+          "value": "0",
+          "points": 0,
+          "definition": "No meaningful answer was provided, or the key recommendation was incorrect."
+        }
+      ],
+      "na_allowed": true,
+      "na_condition": "the conversation ended before the customer formulated their request",
+      "channel_notes": {
+        "voice": "Evaluate whether questions were answered, whether information was correct and complete, whether necessary actions were explained, and whether any incorrect information was given."
+      },
+      "section": "Consultation"
+    },
+    {
+      "id": "c5_empathy",
+      "name": "Empathy and customer orientation",
+      "definition": "The operator communicated politely and, when the customer expressed dissatisfaction or described an inconvenience, responded to the specific problem.",
+      "kind": "binary",
+      "weight": 15,
+      "options": [
+        {
+          "value": "YES",
+          "points": 1,
+          "definition": "Polite throughout, and responded to the specific problem when the customer expressed dissatisfaction."
+        },
+        {
+          "value": "NO",
+          "points": 0,
+          "definition": "Failed to demonstrate appropriate politeness or to respond to the customer's expressed problem."
+        }
+      ],
+      "na_allowed": false,
+      "section": "Communication"
+    },
+    {
+      "id": "c6_management",
+      "name": "Conversation management, speed and communication quality",
+      "definition": "Communication clarity, response organization, and warning the customer about waiting time when necessary.",
+      "kind": "scale",
+      "weight": 15,
+      "options": [
+        {
+          "value": "10",
+          "points": 10,
+          "definition": "Responses are clear and coherent; if there was an obvious waiting period, the operator informed the customer."
+        },
+        {
+          "value": "7",
+          "points": 7,
+          "definition": "One noticeable communication problem occurred, but the customer could still understand and continue."
+        },
+        {
+          "value": "4",
+          "points": 4,
+          "definition": "The customer had to ask additional questions because of unclear wording or poor organization."
+        },
+        {
+          "value": "0",
+          "points": 0,
+          "definition": "Incoherent or contradictory responses made the conversation difficult to understand."
+        }
+      ],
+      "na_allowed": false,
+      "channel_notes": {
+        "voice": "Evaluate logical flow, clarity, absence of inappropriate expressions, correct wording and pause management. Do NOT judge speech speed, diction or pronunciation from a text transcript."
+      },
+      "section": "Communication"
+    },
+    {
+      "id": "c7_conclusion",
+      "name": "Conversation conclusion",
+      "definition": "The operator summarized the result or offered further assistance, and said goodbye.",
+      "kind": "binary",
+      "weight": 5,
+      "options": [
+        {
+          "value": "YES",
+          "points": 1,
+          "definition": "Summarized the result or offered further assistance, and said goodbye."
+        },
+        {
+          "value": "NO",
+          "points": 0,
+          "definition": "Failed to properly conclude the conversation when there was an opportunity."
+        }
+      ],
+      "na_allowed": true,
+      "na_condition": "the conversation ended unexpectedly before the operator had an opportunity to conclude it",
+      "section": "Closing"
+    },
+    {
+      "id": "c8_violations",
+      "name": "Serious violations",
+      "definition": "Insulting or offensive behaviour toward the customer; offering paid services outside the company (including asking the customer to transfer money personally to the operator, or asking for the customer's personal number to provide paid private consultation — the offer alone is enough); disclosing confidential information.",
+      "kind": "violation",
+      "weight": 0,
+      "options": [
+        {
+          "value": "YES",
+          "points": 0,
+          "definition": "At least one listed violation is present (quote it)."
+        },
+        {
+          "value": "NO",
+          "points": 0,
+          "definition": "None of the listed violations is present."
+        }
+      ],
+      "na_allowed": false,
+      "section": "Compliance"
+    }
+  ]
+}
