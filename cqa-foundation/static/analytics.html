@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Аналитика · CQA</title>
+<link rel="stylesheet" href="app.css">
+<style>
+  h2 { font-size:18px; margin:22px 0 10px; } h3 { font-size:14px; margin:12px 0 6px; }
+  td, th { white-space:normal; vertical-align:top; }
+  .hbar { display:grid; grid-template-columns:minmax(140px, 32%) 1fr; gap:6px 10px; align-items:center; max-width:900px; }
+  .hbar .lab { font-size:13px; text-align:right; }
+  .hbar .track { background:var(--line-2); border-radius:6px; height:26px; position:relative; }
+  .hbar .fill { background:linear-gradient(90deg, var(--accent-ink), var(--operator)); height:100%; border-radius:6px; }
+  .hbar .val { position:absolute; left:8px; top:4px; font-size:12px; font-weight:700; color:#fff; mix-blend-mode:normal; }
+  .hbar .val.out { color:var(--ink); }
+  .tabs { display:flex; gap:6px; } .tabs button[aria-pressed="true"] { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .serious { background:var(--bad-bg); border:1px solid var(--bad); border-radius:8px; padding:8px 12px; }
+  .recs li { margin-bottom:8px; }
+  .method { font-size:12px; color:var(--muted); }
+  .tag { font-size:11px; padding:1px 6px; border-radius:10px; background:var(--na-bg); white-space:nowrap; }
+  .tag.rep { background:var(--warn-bg); color:var(--warn); }
+  .rec { border-top:1px solid var(--line); padding:8px 0; }
+  .wrap { overflow-x:auto; }
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side" id="side" data-page="analytics"></aside>
+<div class="main">
+<header class="page-head">
+  <div><h1>Аналитика</h1><div class="sub">Что чаще всего снижает оценку и что исправлять в первую очередь</div></div>
+  <span class="spacer"></span>
+  <label class="small">Канал
+    <select id="channel"><option value="">Все</option><option value="chat">Чаты</option><option value="voice">Звонки</option></select>
+  </label>
+  <a href="/api/analytics/violations.csv"><button type="button">Все нарушения (CSV)</button></a>
+  <button type="button" id="btn-refresh">Обновить</button>
+</header>
+<p id="notice" class="notice" aria-live="polite"></p>
+<main>
+  <div class="tabs" role="tablist">
+    <button type="button" data-tab="company" aria-pressed="true">По компании</button>
+    <button type="button" data-tab="operator" aria-pressed="false">По операторам и диалогам</button>
+  </div>
+
+  <section id="tab-company">
+    <div id="kpis" class="kpis" style="margin-top:16px"></div>
+    <h2>Топ-5 нарушений по Priority Score</h2>
+    <div class="panel"><div id="chart" class="hbar"></div></div>
+    <p class="method" id="method"></p>
+    <h2>Рейтинг нарушений</h2>
+    <div class="wrap"><table>
+      <thead><tr><th>Место</th><th>Нарушение</th><th>Критерий</th><th>Диалогов</th><th>Lost Points</th><th>Frequency</th><th>Priority Score</th><th>Рекомендация оператору</th></tr></thead>
+      <tbody id="ranking"></tbody>
+    </table></div>
+    <h2>Серьёзные нарушения (C8) — вне формулы, обязательная проверка</h2>
+    <div id="serious"></div>
+    <h2>Рекомендации для руководства (по топ-5)</h2>
+    <ol id="mgmt" class="recs"></ol>
+  </section>
+
+  <section id="tab-operator" hidden>
+    <div id="operators"></div>
+    <h2>Диалог</h2>
+    <label class="small">Выберите диалог <select id="dialogue"></select></label>
+    <div id="dialogue-card" class="panel" style="margin-top:10px"></div>
+  </section>
+</main>
+</div>
+</div>
+<script src="shell.js"></script>
+<script src="analytics.js" defer></script>
+</body>
+</html>

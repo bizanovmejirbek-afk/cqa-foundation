@@ -1,9 +1,9 @@
 "use strict";
 const $ = (s) => document.querySelector(s);
 const el = (tag, props = {}, ...kids) => { const n = Object.assign(document.createElement(tag), props); n.append(...kids.filter((k) => k != null)); return n; };
-const NAMES = { c1_contact: "C1 Contact", c2_needs: "C2 Needs", c3_identification: "C3 Identification",
-  c4_consultation: "C4 Consultation", c5_empathy: "C5 Empathy", c6_management: "C6 Management",
-  c7_conclusion: "C7 Conclusion", c8_violations: "C8 Violations" };
+const NAMES = { c1_contact: "C1 Контакт", c2_needs: "C2 Потребности", c3_identification: "C3 Идентификация",
+  c4_consultation: "C4 Консультация", c5_empathy: "C5 Эмпатия", c6_management: "C6 Ведение диалога",
+  c7_conclusion: "C7 Завершение", c8_violations: "C8 Грубые нарушения" };
 const fmt = (v, suffix = "%") => (v == null ? "—" : `${v}${suffix}`);
 
 function kpi(label, value) { return el("div", { className: "kpi" }, el("div", { className: "n" }, value), el("div", { className: "l" }, label)); }
@@ -17,17 +17,17 @@ function rateRow(name, d) {
 async function load() {
   const res = await fetch("/api/accuracy");
   const a = await res.json();
-  if (!a.reference_available) { $("#notice").textContent = "No eval/gold.json found."; return; }
-  if (!a.conversations_compared) { $("#notice").textContent = "No evaluated conversations with reference labels yet. Load the 65 dev dialogues and evaluate them."; }
+  if (!a.reference_available) { $("#notice").textContent = "Файл eval/gold.json не найден."; return; }
+  if (!a.conversations_compared) { $("#notice").textContent = "Нет оценённых диалогов с эталоном. Загрузите 65 dev-диалогов и оцените их."; }
   else $("#notice").textContent = "";
   $("#kpis").replaceChildren(
-    kpi("Verdict accuracy (all criteria)", fmt(a.overall_accuracy)),
-    kpi("Conversations compared", String(a.conversations_compared)),
-    kpi("Final score MAE (points)", a.score_mae == null ? "—" : String(a.score_mae)),
-    kpi("Final score within ±5", fmt(a.score_within_5)),
-    kpi(`N/A precision / recall`, `${fmt(a.na.precision, "")} / ${fmt(a.na.recall, "")}`),
-    kpi("Violations precision / recall", `${fmt(a.violations.precision, "")} / ${fmt(a.violations.recall, "")}`),
-    kpi("Avg cost per evaluation", a.avg_cost_usd == null ? "—" : `$${a.avg_cost_usd}`));
+    kpi("Точность вердиктов (все критерии)", fmt(a.overall_accuracy)),
+    kpi("Диалогов сравнено", String(a.conversations_compared)),
+    kpi("Средняя ошибка балла", a.score_mae == null ? "—" : String(a.score_mae)),
+    kpi("Балл в пределах ±5", fmt(a.score_within_5)),
+    kpi("N/A: точность / полнота", `${fmt(a.na.precision, "")} / ${fmt(a.na.recall, "")}`),
+    kpi("Грубые нарушения: точность / полнота", `${fmt(a.violations.precision, "")} / ${fmt(a.violations.recall, "")}`),
+    kpi("Средняя стоимость оценки", a.avg_cost_usd == null ? "—" : `$${a.avg_cost_usd}`));
   $("#crit").replaceChildren(...Object.entries(a.criteria).map(([k, d]) => rateRow(NAMES[k] ?? k, d)));
   $("#lang").replaceChildren(...Object.entries(a.languages).map(([k, d]) => rateRow(k, d)));
   $("#confusion").replaceChildren(...Object.entries(a.confusion || {}).map(([cid, refs]) => {

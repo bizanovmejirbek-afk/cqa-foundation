@@ -25,6 +25,11 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 def init_db() -> None:
     Base.metadata.create_all(engine)
+    # lightweight migration for databases created by earlier versions
+    with engine.begin() as conn:
+        cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(conversations)")}
+        if "operator_id" not in cols:
+            conn.exec_driver_sql("ALTER TABLE conversations ADD COLUMN operator_id VARCHAR(80)")
 
 
 def get_session():

@@ -1,6 +1,7 @@
 """Glue between config, guardrails, scoring and the database."""
 from __future__ import annotations
 
+import os
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Optional
@@ -202,7 +203,8 @@ def evaluate_conversation(s: Session, conversation_id: str, version: ChecklistVe
 
     def run(c):
         try:
-            return c.id, judge_criterion(c, conv.transcript_json, client, channel)
+            return c.id, judge_criterion(c, conv.transcript_json, client, channel,
+                                         explanation_language=os.getenv("EXPLANATION_LANGUAGE", "Russian"))
         except GuardrailError:
             return c.id, None
 

@@ -106,6 +106,7 @@ class Conversation(Base):
     transcript_json: Mapped[list[Any]] = mapped_column(JSON)           # original messages, untouched
     transcript_hash: Mapped[str] = mapped_column(String(64))
     source_group_id: Mapped[Optional[str]] = mapped_column(String(80))
+    operator_id: Mapped[Optional[str]] = mapped_column(String(80))     # if the organiser data provides it
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

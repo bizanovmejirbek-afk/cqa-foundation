@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Апелляции · CQA</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app">
+<aside class="side" id="side" data-page="appeals"></aside>
+<div class="main">
+  <header class="page-head">
+    <div>
+      <h1>Апелляции и проверка</h1>
+      <div class="sub">Оценки, которые оспорил оператор или которые система сама отправила человеку</div>
+    </div>
+    <span class="spacer"></span>
+    <button type="button" id="btn-refresh">Обновить</button>
+  </header>
+  <p id="notice" class="notice" aria-live="polite"></p>
+  <div id="kpis" class="kpis"></div>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Тип</th><th>Диалог</th><th>Критерий</th><th>Вердикт</th><th>Комментарий / причина</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="small">Решение принимается на странице диалога: «Рассмотреть апелляцию» → подтвердить или изменить вердикт с причиной.
+    Балл пересчитывается сразу, решение AI и решение человека сохраняются в истории.</p>
+</div>
+</div>
+<script src="shell.js"></script>
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const el = (tag, props = {}, ...kids) => { const n = Object.assign(document.createElement(tag), props); n.append(...kids.filter((k) => k != null)); return n; };
+const RU = { c1_contact: "Установление контакта", c2_needs: "Выявление потребностей", c3_identification: "Идентификация",
+  c4_consultation: "Консультация", c5_empathy: "Эмпатия", c6_management: "Ведение диалога", c7_conclusion: "Завершение", c8_violations: "Грубые нарушения" };
+const VRU = { YES: "Да", NO: "Нет", "N/A": "Не применимо" };
+const ISSUE = { UNVERIFIED_QUOTE: "цитата не найдена", LOW_CONFIDENCE: "низкая уверенность", JUDGE_FAILED: "модель не ответила" };
+function kpi(label, value, cls = "") { return el("div", { className: `kpi ${cls}` }, el("div", { className: "n" }, String(value)), el("div", { className: "l" }, label)); }
+async function load() {
+  try {
+    const r = await fetch("/api/review-queue");
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const items = await r.json();
+    const appeals = items.filter((x) => x.type === "APPEAL");
+    $("#kpis").replaceChildren(kpi("Открытых апелляций", appeals.length, appeals.length ? "bad" : ""),
+      kpi("Автоматически отправлено на проверку", items.length - appeals.length));
+    $("#rows").replaceChildren(...(items.length ? items.map((x) => el("tr", {},
+      el("td", {}, el("span", { className: `badge ${x.type === "APPEAL" ? "bad" : "warn"}` }, x.type === "APPEAL" ? "апелляция" : "авто-флаг")),
+      el("td", {}, el("a", { href: `conversation.html?id=${encodeURIComponent(x.conversation_id)}` }, x.conversation_id)),
+      el("td", {}, RU[x.criterion_id] || x.criterion),
+      el("td", {}, VRU[x.verdict] ?? x.verdict ?? "—"),
+      el("td", { style: "white-space:normal" }, x.type === "APPEAL" ? `«${x.comment}»` :
+        (x.issues || []).map((i) => ISSUE[String(i).split(":")[0]] || i).join("; ") + (x.confidence != null ? ` · уверенность ${x.confidence}` : "")),
+      el("td", {}, el("a", { href: `conversation.html?id=${encodeURIComponent(x.conversation_id)}` }, "Рассмотреть →"))))
+      : [el("tr", {}, el("td", { colSpan: 6, className: "small" }, "Очередь пуста."))]));
+    $("#notice").textContent = "";
+  } catch (e) { $("#notice").textContent = "Не удалось загрузить очередь: " + e.message; }
+}
+$("#btn-refresh").addEventListener("click", load);
+load();
+</script>
+</body>
+</html>

@@ -1,14 +1,18 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Criterion Studio · CQA</title>
+<link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="studio.css">
 </head>
 <body>
+<div class="app">
+<aside class="side" id="side" data-page="checklists"></aside>
+<div class="main">
 <header class="bar">
-  <h1>Criterion Studio</h1>
+  <h1>Чек-листы · редактор критериев</h1>
   <label>Criterion
     <select id="criterion-picker"></select>
   </label>
@@ -111,6 +115,9 @@
   </div>
 </template>
 
+</div>
+</div>
+<script src="shell.js"></script>
 <script src="studio.js" defer></script>
 </body>
 </html>

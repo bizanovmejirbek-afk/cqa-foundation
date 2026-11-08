@@ -1,15 +1,11 @@
-:root { --bg:#f7f8fa; --panel:#fff; --ink:#1b1f24; --muted:#5d6670; --line:#d9dde3;
-        --accent:#1a5fb4; --ok:#1f7a3f; --warn:#a15c00; --bad:#b42318; }
-* { box-sizing: border-box; }
-body { margin:0; font:14px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--ink); }
-.bar { display:flex; gap:12px; align-items:center; padding:10px 16px; background:var(--panel);
-       border-bottom:1px solid var(--line); flex-wrap:wrap; }
-.bar h1 { font-size:16px; margin:0 12px 0 0; }
-.studio { display:grid; grid-template-columns:minmax(360px,1fr) minmax(360px,1fr); gap:16px; padding:16px; }
+/* studio-specific; colours come from app.css */
+.bar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.bar h1 { font-size:24px; margin:0 12px 0 0; }
+.studio { display:grid; grid-template-columns:minmax(320px,1fr) minmax(320px,1fr); gap:18px; }
 @media (max-width: 900px) { .studio { grid-template-columns:1fr; } }
-form, .preview { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; }
+form, .preview { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); }
 .preview { position:sticky; top:12px; align-self:start; max-height:calc(100vh - 80px); overflow:auto; }
-fieldset { border:1px solid var(--line); border-radius:6px; margin:0 0 12px; }
+fieldset { border:1px solid var(--line); border-radius:10px; margin:0 0 12px; }
 legend { font-weight:600; padding:0 4px; }
 label { display:flex; flex-direction:column; gap:3px; margin:6px 0; color:var(--muted); }
 label.inline { flex-direction:row; align-items:center; gap:6px; }
@@ -20,6 +16,7 @@ input:invalid, textarea:invalid { border-color:var(--bad); }
 .opt-row input[data-f="definition"], .sub-row input[data-f="question"] { flex:1; }
 button { font:inherit; padding:6px 10px; border:1px solid var(--line); border-radius:5px; background:#fff; cursor:pointer; }
 button[type="submit"] { background:var(--accent); color:#fff; border-color:var(--accent); }
+.side-nav a, .logo { font-family:inherit; }
 button:disabled { opacity:.5; cursor:not-allowed; }
 .actions { display:flex; gap:8px; } .actions input { flex:1; }
 .preview-head { display:flex; align-items:center; gap:8px; } .preview-head h2 { font-size:14px; margin:8px 0; flex:1; }

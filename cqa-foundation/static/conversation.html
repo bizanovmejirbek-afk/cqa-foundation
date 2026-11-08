@@ -1,50 +1,80 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Conversation · CQA</title>
+<title>Анализ разговора · CQA</title>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
-<header class="bar">
-  <h1 id="title">Conversation</h1>
-  <nav><a href="index.html">← Conversations</a><a href="accuracy.html">Accuracy</a><a href="studio.html">Criterion Studio</a></nav>
-  <span class="spacer"></span>
-  <label class="small">Checklist
-    <select id="checklist">
-      <option value="">Auto (by channel)</option>
-      <option value="official-chat">official-chat</option>
-      <option value="official-voice">official-voice</option>
-    </select>
-  </label>
-  <button type="button" id="btn-eval" class="primary">Evaluate</button>
-  <span id="busy" class="small"></span>
-</header>
-<p id="notice" class="notice" aria-live="polite"></p>
-
-<main class="grid">
-  <section class="panel transcript" aria-label="Transcript">
-    <audio id="audio" controls hidden preload="none"></audio>
-    <div id="messages"></div>
-  </section>
-
-  <section aria-label="Evaluation">
-    <div class="panel">
-      <div class="head">
-        <div><div class="small">Final score</div><div id="score" class="big">—</div></div>
-        <div id="meta" class="small"></div>
-      </div>
-      <div id="violations" class="violations" hidden></div>
-      <details id="ledger-box"><summary>Score ledger and history</summary>
-        <table class="ledger"><thead><tr><th>Criterion</th><th>Verdict</th><th>Source</th><th>Weight</th><th>Eff. weight</th><th>Points</th></tr></thead>
-          <tbody id="ledger"></tbody></table>
-        <p id="history" class="small"></p>
-      </details>
+<div class="app">
+<aside class="side" id="side" data-page="dialogs"></aside>
+<div class="main">
+  <header class="page-head">
+    <div>
+      <div class="small"><a href="index.html">← Все диалоги</a></div>
+      <h1>Анализ разговора</h1>
+      <div id="subtitle" class="sub">…</div>
     </div>
-    <div id="cards"></div>
+    <span class="spacer"></span>
+    <div class="toolbar">
+      <select id="checklist" aria-label="Чек-лист">
+        <option value="">Чек-лист по каналу</option>
+        <option value="official-chat">official-chat</option>
+        <option value="official-voice">official-voice</option>
+      </select>
+      <button type="button" id="btn-eval" class="primary">Оценить</button>
+      <span id="busy" class="small"></span>
+    </div>
+  </header>
+  <p id="notice" class="notice" aria-live="polite"></p>
+
+  <section class="panel timeline-panel" aria-label="Хронология разговора">
+    <div id="timeline" class="timeline"></div>
+    <div id="player" class="player" hidden>
+      <button type="button" id="play" class="play" aria-label="Воспроизвести"></button>
+      <span id="time" class="time">0:00 / 0:00</span>
+      <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Перемотка">
+    </div>
+    <div id="legend" class="legend"></div>
+    <audio id="audio" hidden preload="metadata"></audio>
   </section>
-</main>
+
+  <div class="conv-grid">
+    <section class="panel transcript" aria-label="Расшифровка">
+      <h2>Расшифровка</h2>
+      <div id="messages"></div>
+    </section>
+
+    <section class="panel" aria-label="Оценка качества">
+      <h2>Оценка качества</h2>
+      <div class="score-row">
+        <div id="donut" class="donut"></div>
+        <ul id="crit-list" class="crit-list"></ul>
+      </div>
+      <div id="violations" class="alert-bad" hidden></div>
+      <div id="why" class="why" hidden></div>
+      <div id="meta" class="small meta-line"></div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <details id="cards-box" class="cards-box">
+      <summary>Подробно по критериям: обоснование, цитаты, апелляция и проверка</summary>
+      <div id="cards"></div>
+    </details>
+    <details id="ledger-box" style="margin-top:12px">
+      <summary>Расчёт балла и история изменений</summary>
+      <div class="wrap" style="margin-top:10px">
+        <table class="ledger"><thead><tr><th>Критерий</th><th>Вердикт</th><th>Источник</th><th>Вес</th><th>Вес после N/A</th><th>Баллы</th></tr></thead>
+          <tbody id="ledger"></tbody></table>
+      </div>
+      <p id="history" class="small"></p>
+    </details>
+  </section>
+</div>
+</div>
+<script src="shell.js"></script>
 <script src="conversation.js" defer></script>
 </body>
 </html>

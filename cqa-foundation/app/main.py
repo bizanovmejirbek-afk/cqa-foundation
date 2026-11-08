@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .api_main import router as main_router  # noqa: E402
 from .api_studio import router as studio_router  # noqa: E402
+from .api_analytics import router as analytics_router  # noqa: E402
 from .services import ServiceError  # noqa: E402
 from .source_api import SourceError  # noqa: E402
 from .llm_client import LLMError  # noqa: E402
@@ -22,6 +23,7 @@ from sqlalchemy import select  # noqa: E402
 app = FastAPI(title="Freedom Broker CQA")
 app.include_router(studio_router)
 app.include_router(main_router)
+app.include_router(analytics_router)
 
 
 @app.exception_handler(LLMError)

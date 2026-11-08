@@ -63,11 +63,15 @@ def import_records(s: Session, records: list[dict], group_id: str | None = None)
         transcript = rec["transcript"]
         h = hashlib.sha256(json.dumps(transcript, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         cid = str(rec["conversation_id"])
+        op = rec.get("operator_id") or rec.get("agent_id")
+        op = str(op) if op not in (None, "") else None
         conv = s.get(Conversation, cid)
+        if conv is not None and op and conv.operator_id != op:
+            conv.operator_id = op
         if conv is None:
             s.add(Conversation(id=cid, channel=rec["channel"], language=rec.get("language"),
                                audio_url=rec.get("audio_url") or None, transcript_json=transcript,
-                               transcript_hash=h, source_group_id=group_id))
+                               transcript_hash=h, source_group_id=group_id, operator_id=op))
             added += 1
         elif conv.transcript_hash != h:
             conv.transcript_json, conv.transcript_hash = transcript, h

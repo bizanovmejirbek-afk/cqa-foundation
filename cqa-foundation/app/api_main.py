@@ -357,6 +357,7 @@ def review_queue(s: Session = Depends(get_session)):
     for a in s.scalars(select(Appeal).where(Appeal.status != AppealStatus.RESOLVED).order_by(Appeal.id)):
         r = a.result
         items.append({"type": "APPEAL", "appeal_id": a.id, "result_id": r.id, "criterion": r.criterion_name,
+                      "criterion_id": r.criterion_id,
                       "conversation_id": r.evaluation.conversation_id, "evaluation_id": r.evaluation_id,
                       "verdict": effective(r)[0], "comment": a.comment, "status": a.status.value,
                       "locked_by": a.locked_by})
@@ -365,6 +366,7 @@ def review_queue(s: Session = Depends(get_session)):
             if r.needs_review and not r.decisions and not any(
                     a.status != AppealStatus.RESOLVED for a in r.appeals):
                 items.append({"type": "AUTO_FLAG", "result_id": r.id, "criterion": r.criterion_name,
+                              "criterion_id": r.criterion_id,
                               "conversation_id": ev.conversation_id, "evaluation_id": ev.id,
                               "verdict": r.verdict, "issues": r.issues_json, "confidence": r.confidence})
     return items

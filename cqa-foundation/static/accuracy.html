@@ -1,14 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Accuracy · CQA</title>
+<title>Точность · CQA</title>
 <link rel="stylesheet" href="app.css">
 <style>
-  .kpis { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
-  .kpi { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 14px; min-width:150px; }
-  .kpi .n { font-size:26px; font-weight:800; } .kpi .l { font-size:12px; color:var(--muted); }
   .two { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
   @media (max-width:900px) { .two { grid-template-columns:1fr; } }
   .bar-cell { position:relative; min-width:160px; }
@@ -18,27 +15,30 @@
 </style>
 </head>
 <body>
-<header class="bar">
-  <h1>Accuracy vs reference</h1>
-  <nav><a href="index.html">← Conversations</a><a href="studio.html">Criterion Studio</a></nav>
+<div class="app">
+<aside class="side" id="side" data-page="accuracy"></aside>
+<div class="main">
+<header class="page-head">
+  <div><h1>Точность</h1><div class="sub">Сравнение вердиктов AI (до проверки человеком) с эталонной разметкой <code>eval/gold.json</code></div></div>
   <span class="spacer"></span>
-  <a href="/api/accuracy/export.csv"><button type="button">Download mismatches (CSV)</button></a>
-  <button type="button" id="btn-refresh">Refresh</button>
+  <a href="/api/accuracy/export.csv"><button type="button">Расхождения (CSV)</button></a>
+  <button type="button" id="btn-refresh">Обновить</button>
 </header>
 <p id="notice" class="notice" aria-live="polite"></p>
-<main class="wrap">
-  <p class="small">Compares the AI's own verdicts (before human review) with the reference labels in <code>eval/gold.json</code>.
-    The reference labels are a team-made gold set, not the organisers' Ground Truth.</p>
+<main>
   <div id="kpis" class="kpis"></div>
   <div class="two">
-    <section><h2>By criterion</h2><table><thead><tr><th>Criterion</th><th>Accuracy</th><th></th><th>n</th></tr></thead><tbody id="crit"></tbody></table></section>
-    <section><h2>By language</h2><table><thead><tr><th>Language</th><th>Accuracy</th><th></th><th>n</th></tr></thead><tbody id="lang"></tbody></table></section>
+    <section><h2>По критериям</h2><table><thead><tr><th>Критерий</th><th>Точность</th><th></th><th>n</th></tr></thead><tbody id="crit"></tbody></table></section>
+    <section><h2>По языкам</h2><table><thead><tr><th>Язык</th><th>Точность</th><th></th><th>n</th></tr></thead><tbody id="lang"></tbody></table></section>
   </div>
-  <h2>Confusion by criterion (rows = reference, columns = AI)</h2>
+  <h2>Матрица ошибок (строки — эталон, столбцы — AI)</h2>
   <div id="confusion" class="two"></div>
-  <h2>Mismatches (click to open the conversation)</h2>
-  <table><thead><tr><th>Conversation</th><th>Criterion</th><th>Reference</th><th>AI</th><th>Lang</th></tr></thead><tbody id="mis"></tbody></table>
+  <h2>Расхождения (клик — открыть диалог)</h2>
+  <table><thead><tr><th>Диалог</th><th>Критерий</th><th>Эталон</th><th>AI</th><th>Язык</th></tr></thead><tbody id="mis"></tbody></table>
 </main>
+</div>
+</div>
+<script src="shell.js"></script>
 <script src="accuracy.js" defer></script>
 </body>
 </html>
