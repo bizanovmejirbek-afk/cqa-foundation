@@ -1,2 +1,0 @@
-# cqa-foundation
-Datathon
