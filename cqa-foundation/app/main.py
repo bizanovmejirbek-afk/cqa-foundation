@@ -16,6 +16,8 @@ from .llm_client import LLMError  # noqa: E402
 from .config_schema import ChecklistConfig  # noqa: E402
 from .db import SessionLocal, init_db  # noqa: E402
 from .services import save_checklist_version  # noqa: E402
+from .models import ChecklistVersion  # noqa: E402
+from sqlalchemy import select  # noqa: E402
 
 app = FastAPI(title="Freedom Broker CQA")
 app.include_router(studio_router)
@@ -45,7 +47,10 @@ def _startup() -> None:
     with SessionLocal() as s:  # idempotent: same content hash -> no new version
         for slug, fname in (("official-chat", "official_chat_v1.json"), ("official-voice", "official_voice_v1.json")):
             cfg = ChecklistConfig.model_validate_json((seed.parent / fname).read_text(encoding="utf-8"))
-            save_checklist_version(s, slug, cfg, change_note="Official checklist seed", author="system")
+            note = f"seed {cfg.content_hash()[:12]}"
+            # seed only when this file content was never seeded: edits saved in the Studio are not overwritten
+            if s.scalar(select(ChecklistVersion.id).where(ChecklistVersion.change_note == note)) is None:
+                save_checklist_version(s, slug, cfg, change_note=note, author="system")
 
 
 app.mount("/", StaticFiles(directory=Path(__file__).parent.parent / "static", html=True), name="static")

@@ -1,0 +1,52 @@
+{
+  "isSuccess": true,
+  "error": null,
+  "data": {
+    "dataset_group_id": "demo",
+    "total_records": 3,
+    "records": [
+      {
+        "conversation_id": "demo-ru-withdrawal",
+        "channel": "agent chat",
+        "language": "ru",
+        "audio_url": "",
+        "transcript": [
+          {"timestamp": "00:00", "speaker": "bot", "text": "Здравствуйте! Я виртуальный помощник Freedom Broker. Соединяю с оператором."},
+          {"timestamp": "00:12", "speaker": "client", "text": "Здравствуйте, хочу вывести деньги со своего счёта, сколько там сейчас доступно?"},
+          {"timestamp": "00:41", "speaker": "operator", "text": "Здравствуйте! Меня зовут Айгерим, я помогу вам. Для начала подтвердите, пожалуйста, ваше ФИО и дату рождения."},
+          {"timestamp": "01:20", "speaker": "client", "text": "Иванов Сергей Петрович, 12.03.1988."},
+          {"timestamp": "01:55", "speaker": "operator", "text": "Спасибо, данные подтверждены. На вашем счёте доступно к выводу 1 250 USD. Вывод можно оформить в приложении в разделе «Вывод средств»."},
+          {"timestamp": "02:30", "speaker": "client", "text": "Понял, спасибо."},
+          {"timestamp": "02:44", "speaker": "operator", "text": "Пожалуйста! Могу ещё чем-нибудь помочь? Хорошего дня!"}
+        ]
+      },
+      {
+        "conversation_id": "demo-kz-tariff",
+        "channel": "agent chat",
+        "language": "kz",
+        "audio_url": "",
+        "transcript": [
+          {"timestamp": "00:00", "speaker": "client", "text": "Сәлеметсіз бе, сіздердегі тарифтер туралы білгім келеді"},
+          {"timestamp": "00:35", "speaker": "operator", "text": "Сәлеметсіз бе! Менің атым Ерлан. Қай нарықта сауда жасағыңыз келеді: Қазақстан ма, әлде АҚШ па?"},
+          {"timestamp": "01:10", "speaker": "client", "text": "АҚШ акциялары"},
+          {"timestamp": "01:40", "speaker": "operator", "text": "Бір минут күте тұрыңызшы, тарифтерді тексеріп жатырмын."},
+          {"timestamp": "04:05", "speaker": "operator", "text": "АҚШ нарығы үшін комиссия тарифке байланысты. Толық кестені қосымшадағы «Тарифтер» бөлімінен көре аласыз."},
+          {"timestamp": "04:30", "speaker": "client", "text": "Жақсы, рақмет"}
+        ]
+      },
+      {
+        "conversation_id": "demo-en-violation",
+        "channel": "agent chat",
+        "language": "en",
+        "audio_url": "",
+        "transcript": [
+          {"timestamp": "00:00", "speaker": "client", "text": "Hi, my account was blocked and I am really frustrated, I cannot trade."},
+          {"timestamp": "00:28", "speaker": "operator", "text": "Hello, this is Daniyar. What is your account number?"},
+          {"timestamp": "00:50", "speaker": "client", "text": "It's 4471209."},
+          {"timestamp": "01:30", "speaker": "operator", "text": "The block is a compliance check, it usually takes 2 days. By the way, if you send me your personal number I can give you private paid trading advice."},
+          {"timestamp": "01:58", "speaker": "client", "text": "Hmm, ok, I will wait."}
+        ]
+      }
+    ]
+  }
+}

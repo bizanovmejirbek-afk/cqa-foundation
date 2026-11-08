@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model
 
 from .config_schema import NA, CriterionConfig
 
-PROMPT_TEMPLATE_VERSION = "judge-v1"
+PROMPT_TEMPLATE_VERSION = "judge-v3"
 
 # --------------------------------------------------------------------------- #
 # Transcript rendering
@@ -37,6 +37,62 @@ def render_transcript(messages: list[dict]) -> str:
 
 
 # --------------------------------------------------------------------------- #
+# Facts computed by Python (timing, system events) — the model reads, never guesses
+# --------------------------------------------------------------------------- #
+PAUSE_SECONDS = 180
+
+
+def _seconds(ts: Any) -> Optional[float]:
+    """'mm:ss', 'hh:mm:ss' or ISO-8601 -> seconds (None if unknown)."""
+    t = str(ts or "").strip()
+    if not t:
+        return None
+    if re.fullmatch(r"\d{1,3}(:\d{2}){1,2}(\.\d+)?", t):
+        secs = 0.0
+        for part in t.split(":"):
+            secs = secs * 60 + float(part)
+        return secs
+    try:
+        from datetime import datetime
+        return datetime.fromisoformat(re.sub(r"(\.\d{6})\d+", r"\1", t).replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
+
+
+def compute_facts(messages: list[dict]) -> list[str]:
+    spk = [str(m.get("speaker", "")).lower() for m in messages]
+    facts: list[str] = []
+    op = [i for i, x in enumerate(spk) if x in ("operator", "agent")]
+    if not op:
+        return ["No OPERATOR message in this conversation."]
+    facts.append(f"The operator's first message is #{op[0]}. Everything before it (bot, queue, transfer) "
+                 "is not the operator's responsibility.")
+    pauses = []
+    for i in range(op[0] + 1, len(messages)):
+        if spk[i] != "client":
+            continue
+        nxt = next((j for j in range(i + 1, len(messages)) if spk[j] in ("operator", "agent")), None)
+        if nxt is None or any(spk[k] == "client" for k in range(i + 1, nxt)):
+            continue  # only the client's LAST message before an operator reply starts a wait
+        a, b = _seconds(messages[i].get("timestamp")), _seconds(messages[nxt].get("timestamp"))
+        if a is not None and b is not None and b - a >= PAUSE_SECONDS:
+            pauses.append(f"#{i} -> #{nxt}: {int(b - a)} s")
+    if pauses:
+        facts.append(f"Waits of {PAUSE_SECONDS} s or more for an operator reply after the operator joined: "
+                     + "; ".join(pauses) + ".")
+    else:
+        facts.append(f"No wait of {PAUSE_SECONDS} s or more for an operator reply after the operator joined.")
+    events = [f"#{i} \"{str(messages[i].get('text', ''))[:80]}\"" for i, x in enumerate(spk) if x == "system"]
+    if events:
+        facts.append("System events: " + "; ".join(events) + ".")
+    last_op = op[-1]
+    after = [spk[k] for k in range(last_op + 1, len(messages))]
+    facts.append(f"The operator's last message is #{last_op}; after it: "
+                 + (", ".join(after) if after else "nothing (the operator spoke last)") + ".")
+    return facts
+
+
+# --------------------------------------------------------------------------- #
 # Prompt builder
 # --------------------------------------------------------------------------- #
 SYSTEM_TEMPLATE = """You are a quality-assurance evaluator for Freedom Broker customer-support conversations.
@@ -51,7 +107,8 @@ Rules:
 6. If a required action is missing, set missing_location to the message after which it should have happened.
 7. Never claim an action that no message shows. If something cannot be verified from the transcript, say so in reasoning and lower confidence.
 8. Choose the verdict only from the allowed values, after writing evidence and reasoning.
-9. Write reasoning in {explanation_language}."""
+9. Lower a verdict only for a failure you can point to in the transcript (or a required action that is clearly missing). Do not deduct for optional improvements ("could also have...") that the client did not need or ask for.
+10. Write reasoning in {explanation_language}."""
 
 
 def _fmt_points(p) -> str:
@@ -70,8 +127,13 @@ def render_criterion_block(c: CriterionConfig, channel: str = "chat") -> str:
     else:
         parts.append(f'- "{NA}" is NOT allowed for this criterion.')
     if c.sub_checks:
-        parts.append("SUB-CHECKS (answer each YES or NO with evidence):")
-        parts += [f"- {s.id}: {s.question}" for s in c.sub_checks]
+        parts.append("SUB-CHECKS (answer each YES or NO with evidence; the system combines the answers):")
+        parts += [f"- {s.id}: {s.question}" + (" [NO = no problem]" if s.pass_answer == "NO" else "")
+                  for s in c.sub_checks]
+        if c.sub_check_rule == "gate":
+            parts.append("Answer the sub-checks literally from the transcript and FACTS. If no problem is "
+                         "found, the top verdict applies; choose a lower verdict only for the problems "
+                         "your sub-check answers name.")
     note = c.channel_notes.get(channel)  # type: ignore[arg-type]
     if note:
         parts.append(f"CHANNEL NOTE ({channel}): {note}")
@@ -92,6 +154,8 @@ def build_prompt(c: CriterionConfig, messages: list[dict], channel: str = "chat"
     user = "\n\n".join([
         render_criterion_block(c, channel),
         f"CHANNEL: {channel}",
+        "FACTS (computed by the system from timestamps and events; they are reliable):\n- "
+        + "\n- ".join(compute_facts(messages)),
         "<transcript>\n" + render_transcript(messages) + "\n</transcript>",
         "Return the JSON object now.",
     ])
@@ -325,14 +389,25 @@ def verify_quote(quote: str, cited_index: int, messages: list[dict],
 # Consistency rules + sub-check derivation
 # --------------------------------------------------------------------------- #
 def derive_from_subchecks(c: CriterionConfig, out: BaseModel) -> Optional[str]:
+    """Combine sub-check answers in Python.
+    all/any: pass_value / fail_value.
+    gate: an N/A sub-check that fails -> N/A; every other sub-check passes -> pass_value
+    (top verdict); otherwise the LLM's lower verdict (or fail_value if it still said the top one)."""
     if not c.sub_checks:
         return None
     answers = {s.check_id: s.answer for s in out.sub_checks}
     if set(answers) != {s.id for s in c.sub_checks}:
         return None
-    vals = [answers[s.id] == "YES" for s in c.sub_checks]
-    passed = all(vals) if c.sub_check_rule == "all" else any(vals)
-    return c.pass_value if passed else c.fail_value
+    ok = {s.id: answers[s.id] == s.pass_answer for s in c.sub_checks}
+    if c.sub_check_rule != "gate":
+        vals = list(ok.values())
+        passed = all(vals) if c.sub_check_rule == "all" else any(vals)
+        return c.pass_value if passed else c.fail_value
+    if any(s.on_fail == "na" and not ok[s.id] for s in c.sub_checks):
+        return NA
+    if all(ok[s.id] for s in c.sub_checks if s.on_fail == "fail"):
+        return c.pass_value
+    return out.verdict if out.verdict not in (NA, c.pass_value) else c.fail_value
 
 
 @dataclass
@@ -412,10 +487,18 @@ def judge_criterion(c: CriterionConfig, messages: list[dict], client: LLMClient,
                              "evidence": [x.to_dict() for x in sv]})
 
         derived = derive_from_subchecks(c, out)
-        verdict = out.verdict if (out.verdict == NA or derived is None) else derived
+        gate = c.sub_check_rule == "gate" and derived is not None
+        if gate:
+            verdict = derived
+            if verdict == NA and not (out.na_reason or "").strip():
+                failed = next(s for s in c.sub_checks if s.on_fail == "na"
+                              and next(a.answer for a in out.sub_checks if a.check_id == s.id) != s.pass_answer)
+                out.na_reason = f"Sub-check {failed.id}: {failed.question[:200]}"
+        else:
+            verdict = out.verdict if (out.verdict == NA or derived is None) else derived
         # sub-check quotes count as evidence too; their failures are surfaced as issues
         issues = check_consistency(c, out, main + sub_verified, verdict)
-        if derived is not None and out.verdict not in (NA, derived):
+        if derived is not None and not gate and out.verdict not in (NA, derived):
             issues.append(f'Your verdict "{out.verdict}" contradicts your sub-check answers '
                           f'(which imply "{derived}").')
 
@@ -426,7 +509,7 @@ def judge_criterion(c: CriterionConfig, messages: list[dict], client: LLMClient,
 
         return CriterionVerdict(
             criterion_id=c.id, verdict=verdict, llm_verdict=out.verdict,
-            derived_from_subchecks=derived is not None and out.verdict != NA,
+            derived_from_subchecks=derived is not None and (gate or out.verdict != NA),
             evidence=main,
             sub_checks=sub_rows,
             missing_location=out.missing_location.model_dump() if out.missing_location else None,

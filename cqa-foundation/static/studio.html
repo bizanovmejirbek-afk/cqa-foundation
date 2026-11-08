@@ -51,10 +51,10 @@
     </fieldset>
 
     <fieldset>
-      <legend>Sub-checks (optional, Yes/No criteria)</legend>
+      <legend>Sub-checks (optional; scale criteria: Gate rule only)</legend>
       <div class="row">
         <label>Rule
-          <select name="sub_check_rule"><option value="all">All must pass</option><option value="any">Any passes</option></select>
+          <select name="sub_check_rule"><option value="all">All must pass</option><option value="any">Any passes</option><option value="gate">Gate: all pass → top verdict</option></select>
         </label>
         <label>Pass → <input name="pass_value" value="YES" size="6"></label>
         <label>Fail → <input name="fail_value" value="NO" size="6"></label>
@@ -105,6 +105,8 @@
   <div class="sub-row">
     <input data-f="id" placeholder="greeted" size="12" pattern="[a-z][a-z0-9_]{1,63}" required>
     <input data-f="question" placeholder="Does the first operator message contain a greeting?" required>
+    <select data-f="pass_answer" title="Answer that means no problem"><option value="YES">OK = YES</option><option value="NO">OK = NO</option></select>
+    <select data-f="on_fail" title="What a problem means"><option value="fail">problem → lower</option><option value="na">problem → N/A</option></select>
     <button type="button" data-action="remove-row" aria-label="Remove">×</button>
   </div>
 </template>

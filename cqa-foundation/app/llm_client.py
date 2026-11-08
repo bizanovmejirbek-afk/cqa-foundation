@@ -183,8 +183,10 @@ class MockClient(_Base):
                "reasoning": "MOCK judge (no LLM key configured): placeholder verdict.",
                "verdict": verdict, "confidence": 0.5}
         if "sub_checks" in props:
-            ids = re.findall(r"^- ([a-z][a-z0-9_]+): ", user.split("SUB-CHECKS", 1)[-1], re.M)
-            out["sub_checks"] = [{"check_id": i, "answer": "YES", "evidence": evidence} for i in ids]
+            block = user.split("SUB-CHECKS", 1)[-1].split("<transcript>", 1)[0]
+            rows = re.findall(r"^- ([a-z][a-z0-9_]+): (.*)$", block, re.M)
+            out["sub_checks"] = [{"check_id": i, "answer": "NO" if q.endswith("[NO = no problem]") else "YES",
+                                  "evidence": evidence} for i, q in rows]
         return out
 
 

@@ -177,6 +177,35 @@ def _ai_match(ev: Evaluation) -> tuple[int, int]:
     return sum(a == b for a, b in pairs), len(pairs)
 
 
+@router.get("/accuracy/export.csv")
+def accuracy_export(only_mismatches: bool = True, s: Session = Depends(get_session)):
+    """CSV of AI vs reference per criterion, with the AI's reasoning and evidence, for error analysis."""
+    import csv
+    import io
+    from fastapi.responses import Response
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["conversation_id", "language", "channel", "criterion_id", "reference", "ai_verdict",
+                "llm_verdict", "confidence", "na_reason", "missing", "evidence", "reasoning", "issues"])
+    for conv_id, ev in sorted(latest_evaluations(s).items()):
+        ref = reference_for(conv_id)
+        if not ref:
+            continue
+        conv = s.get(Conversation, conv_id)
+        for r in ev.results:
+            gold = ref["verdicts"].get(r.criterion_id)
+            if gold is None or (only_mismatches and gold == r.verdict):
+                continue
+            ev_txt = " | ".join(f"#{e.message_index}[{e.status.value}] {e.matched_text or e.quote}" for e in r.evidence)
+            miss = f"after #{r.missing_after_index}: {r.missing_description}" if r.missing_description else ""
+            w.writerow([conv_id, conv.language if conv else "", conv.channel if conv else "", r.criterion_id,
+                        gold, r.verdict, r.llm_verdict, r.confidence, r.na_reason or "", miss, ev_txt,
+                        r.reasoning or "", "; ".join(r.issues_json or [])])
+    data = "\ufeff" + buf.getvalue()  # BOM so Excel opens Cyrillic/Kazakh correctly
+    return Response(content=data.encode("utf-8"), media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": "attachment; filename=cqa_mismatches.csv"})
+
+
 @router.get("/accuracy")
 def accuracy(s: Session = Depends(get_session)):
     rows = []

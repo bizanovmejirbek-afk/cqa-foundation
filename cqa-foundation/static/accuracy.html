@@ -22,6 +22,7 @@
   <h1>Accuracy vs reference</h1>
   <nav><a href="index.html">← Conversations</a><a href="studio.html">Criterion Studio</a></nav>
   <span class="spacer"></span>
+  <a href="/api/accuracy/export.csv"><button type="button">Download mismatches (CSV)</button></a>
   <button type="button" id="btn-refresh">Refresh</button>
 </header>
 <p id="notice" class="notice" aria-live="polite"></p>
@@ -33,6 +34,8 @@
     <section><h2>By criterion</h2><table><thead><tr><th>Criterion</th><th>Accuracy</th><th></th><th>n</th></tr></thead><tbody id="crit"></tbody></table></section>
     <section><h2>By language</h2><table><thead><tr><th>Language</th><th>Accuracy</th><th></th><th>n</th></tr></thead><tbody id="lang"></tbody></table></section>
   </div>
+  <h2>Confusion by criterion (rows = reference, columns = AI)</h2>
+  <div id="confusion" class="two"></div>
   <h2>Mismatches (click to open the conversation)</h2>
   <table><thead><tr><th>Conversation</th><th>Criterion</th><th>Reference</th><th>AI</th><th>Lang</th></tr></thead><tbody id="mis"></tbody></table>
 </main>

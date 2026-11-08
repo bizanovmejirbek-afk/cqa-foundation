@@ -39,7 +39,9 @@ class OptionConfig(_Strict):
 class SubCheck(_Strict):
     """CheckEval-style binary question. Answers are combined by Python, not the LLM."""
     id: str
-    question: str = Field(min_length=3, max_length=500)
+    question: str = Field(min_length=3, max_length=700)
+    pass_answer: Literal["YES", "NO"] = "YES"  # the answer that means "no problem found"
+    on_fail: Literal["fail", "na"] = "fail"    # "na": the other answer makes the criterion N/A
 
     @field_validator("id")
     @classmethod
@@ -61,7 +63,7 @@ class CriterionConfig(_Strict):
     subject: Literal["operator"] = "operator"  # whose behaviour is judged
     evidence_required: bool = True
     sub_checks: list[SubCheck] = Field(default_factory=list)
-    sub_check_rule: Optional[Literal["all", "any"]] = None
+    sub_check_rule: Optional[Literal["all", "any", "gate"]] = None
     pass_value: Optional[str] = None  # verdict when sub-checks pass
     fail_value: Optional[str] = None  # verdict when sub-checks fail
     channel_notes: dict[Literal["chat", "voice"], str] = Field(default_factory=dict)
@@ -98,8 +100,14 @@ class CriterionConfig(_Strict):
         if len(set(ids)) != len(ids):
             raise ValueError("sub-check ids must be unique")
         if self.sub_checks:
-            if self.kind != "binary":
-                raise ValueError("sub-checks are supported for binary criteria only")
+            if self.kind == "violation":
+                raise ValueError("sub-checks are not supported for violation criteria")
+            if self.kind == "scale" and self.sub_check_rule != "gate":
+                raise ValueError("scale criteria support sub-checks only with the 'gate' rule")
+            if any(s.on_fail == "na" for s in self.sub_checks) and not self.na_allowed:
+                raise ValueError("an N/A sub-check needs na_allowed = true")
+            if any(s.on_fail == "na" for s in self.sub_checks) and self.sub_check_rule != "gate":
+                raise ValueError("N/A sub-checks need the 'gate' rule")
             if not (self.sub_check_rule and self.pass_value and self.fail_value):
                 raise ValueError("sub-checks need sub_check_rule, pass_value and fail_value")
             if {self.pass_value, self.fail_value} - set(values):

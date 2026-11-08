@@ -62,7 +62,11 @@ function readForm() {
 
 function addRow(templateId, container, data = {}) {
   const node = $(templateId).content.firstElementChild.cloneNode(true);
-  for (const input of $$("[data-f]", node)) input.value = data[input.dataset.f] ?? "";
+  for (const input of $$("[data-f]", node)) {
+    const v = data[input.dataset.f];
+    if (v != null) input.value = v;
+    else if (input.tagName !== "SELECT") input.value = "";  // selects keep their first option
+  }
   container.append(node);
   return node;
 }
@@ -103,8 +107,10 @@ function renderCriterionBlock(c, channel = "chat") {
   parts.push(c.na_allowed ? `- "N/A": only if ${c.na_condition ?? ""}`
                           : `- "N/A" is NOT allowed for this criterion.`);
   if (c.sub_checks.length) {
-    parts.push("SUB-CHECKS (answer each YES or NO with evidence):");
-    for (const s of c.sub_checks) parts.push(`- ${s.id}: ${s.question}`);
+    parts.push("SUB-CHECKS (answer each YES or NO with evidence; the system combines the answers):");
+    for (const s of c.sub_checks) parts.push(`- ${s.id}: ${s.question}` + (s.pass_answer === "NO" ? " [NO = no problem]" : ""));
+    if (c.sub_check_rule === "gate") parts.push("Answer the sub-checks literally from the transcript and FACTS. If no problem is "
+      + "found, the top verdict applies; choose a lower verdict only for the problems your sub-check answers name.");
   }
   if (c.channel_notes[channel]) parts.push(`CHANNEL NOTE (${channel}): ${c.channel_notes[channel]}`);
   return parts.join("\n");
@@ -146,7 +152,10 @@ function clientErrors(c) {
   if (c.kind !== "violation" && !c.options.some((o) => o.points > 0)) e.push("One option must award points > 0.");
   if (c.na_allowed && !c.na_condition) e.push("Describe when N/A applies.");
   if (c.sub_checks.length) {
-    if (c.kind !== "binary") e.push("Sub-checks work with Yes/No criteria only.");
+    if (c.kind === "violation") e.push("Violation criteria cannot have sub-checks.");
+    if (c.kind === "scale" && c.sub_check_rule !== "gate") e.push("Scale criteria need the Gate rule for sub-checks.");
+    if (c.sub_checks.some((s) => s.on_fail === "na") && !c.na_allowed) e.push("An N/A sub-check needs N/A allowed.");
+    if (c.sub_checks.some((s) => s.on_fail === "na") && c.sub_check_rule !== "gate") e.push("N/A sub-checks need the Gate rule.");
     if (![c.pass_value, c.fail_value].every((v) => vals.includes(v))) e.push("Pass/Fail values must be option values.");
   }
   return e;

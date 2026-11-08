@@ -30,6 +30,17 @@ async function load() {
     kpi("Avg cost per evaluation", a.avg_cost_usd == null ? "—" : `$${a.avg_cost_usd}`));
   $("#crit").replaceChildren(...Object.entries(a.criteria).map(([k, d]) => rateRow(NAMES[k] ?? k, d)));
   $("#lang").replaceChildren(...Object.entries(a.languages).map(([k, d]) => rateRow(k, d)));
+  $("#confusion").replaceChildren(...Object.entries(a.confusion || {}).map(([cid, refs]) => {
+    const cols = [...new Set(Object.values(refs).flatMap((r) => Object.keys(r)))].sort();
+    const rows = Object.keys(refs).sort();
+    return el("section", {}, el("h2", {}, NAMES[cid] ?? cid),
+      el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "ref \\ AI"), ...cols.map((c) => el("th", {}, c)))),
+        el("tbody", {}, ...rows.map((r) => el("tr", {}, el("th", {}, r),
+          ...cols.map((c) => {
+            const n = refs[r][c] || 0;
+            return el("td", { style: n ? (r === c ? "background:var(--ok-bg);font-weight:700" : "background:var(--bad-bg)") : "" }, n ? String(n) : "");
+          }))))));
+  }));
   $("#mis").replaceChildren(...a.mismatches.map((m) => el("tr", {},
     el("td", {}, el("a", { href: `conversation.html?id=${encodeURIComponent(m.conversation_id)}#c-${m.criterion_id}` }, m.conversation_id)),
     el("td", {}, NAMES[m.criterion_id] ?? m.criterion_id),

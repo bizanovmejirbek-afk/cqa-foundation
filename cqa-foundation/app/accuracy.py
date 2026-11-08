@@ -37,6 +37,7 @@ def compute_accuracy(evals: list[dict]) -> dict:
     """`evals`: [{conversation_id, language, channel, final_score, verdicts: {criterion_id: ai_verdict}}]"""
     gold = load_gold()
     per_crit = defaultdict(lambda: {"n": 0, "match": 0})
+    confusion: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))  # crit -> ref -> ai -> n
     per_lang = defaultdict(lambda: {"n": 0, "match": 0})
     na = {"tp": 0, "fp": 0, "fn": 0}
     viol = {"tp": 0, "fp": 0, "fn": 0}
@@ -56,6 +57,7 @@ def compute_accuracy(evals: list[dict]) -> dict:
             ok = pred == ref
             matched += ok
             per_crit[cid]["n"] += 1; per_crit[cid]["match"] += ok
+            confusion[cid][ref][pred if pred is not None else "—"] += 1
             lang = (ev.get("language") or "?").upper()
             per_lang[lang]["n"] += 1; per_lang[lang]["match"] += ok
             if ref == "N/A" or pred == "N/A":
@@ -78,6 +80,7 @@ def compute_accuracy(evals: list[dict]) -> dict:
         "conversations_compared": len(conv_rows),
         "overall_accuracy": _pct(total_m, total_n),
         "criteria": {k: {**v, "accuracy": _pct(v["match"], v["n"])} for k, v in sorted(per_crit.items())},
+        "confusion": {c: {r: dict(p) for r, p in refs.items()} for c, refs in sorted(confusion.items())},
         "languages": {k: {**v, "accuracy": _pct(v["match"], v["n"])} for k, v in sorted(per_lang.items())},
         "na": {**na, "precision": _pct(na["tp"], na["tp"] + na["fp"]), "recall": _pct(na["tp"], na["tp"] + na["fn"])},
         "violations": {**viol, "precision": _pct(viol["tp"], viol["tp"] + viol["fp"]),

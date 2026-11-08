@@ -56,7 +56,7 @@ def test_prompt_contains_config_and_is_stable():
     p1 = build_prompt(C["c3_identification"], MSGS)
     p2 = build_prompt(C["c3_identification"], MSGS)
     assert p1.prompt_hash == p2.prompt_hash
-    assert "general question about tariffs" in p1.user and '"N/A": only if' in p1.user
+    assert "specific account case" in p1.user and "FACTS" in p1.user and '"N/A": only if' in p1.user
     assert "#2 [00:40] OPERATOR:" in p1.user and "BOT (context only)" in p1.user
 
 
@@ -149,6 +149,43 @@ def test_unparseable_twice_raises_instead_of_guessing():
 
 def test_invented_quote_flags_needs_review():
     bad = {"evidence": [{"message_index": 3, "quote": "Your balance is 5000 USD"}],
-           "reasoning": "verified", "verdict": "YES", "confidence": 0.95}
+           "reasoning": "verified", "verdict": "YES", "confidence": 0.95,
+           "sub_checks": [{"check_id": "protected", "answer": "YES", "evidence": []},
+                          {"check_id": "verified_before", "answer": "YES", "evidence": []}]}
     r = judge_criterion(C["c3_identification"], MSGS, FakeLLM(bad, bad))
     assert r.needs_review and any("not found verbatim" in i for i in r.issues)
+
+
+def _gate_out(answers, verdict):
+    return {"sub_checks": [{"check_id": k, "answer": a, "evidence": []} for k, a in answers.items()],
+            "evidence": [{"message_index": 1, "quote": MSGS[1]["text"][:20]}],
+            "missing_location": {"after_message_index": 1, "description": "problem here"},
+            "na_reason": None, "reasoning": "test reasoning", "verdict": verdict, "confidence": 0.9}
+
+
+def test_gate_na_subcheck_gives_na():
+    out = _gate_out({"protected": "NO", "verified_before": "NO"}, "NO")
+    r = judge_criterion(C["c3_identification"], MSGS, FakeLLM(out, out))
+    assert r.verdict == "N/A" and r.na_reason and r.derived_from_subchecks
+
+
+def test_gate_all_pass_gives_top_verdict_even_if_llm_deducts():
+    out = _gate_out({"unwarned_wait": "NO", "unclear": "NO", "incoherent": "NO"}, "7")
+    assert judge_criterion(C["c6_management"], MSGS, FakeLLM(out, out)).verdict == "10"
+
+
+def test_gate_failure_keeps_lower_llm_verdict_or_fail_value():
+    out = _gate_out({"unwarned_wait": "NO", "unclear": "YES", "incoherent": "NO"}, "4")
+    assert judge_criterion(C["c6_management"], MSGS, FakeLLM(out, out)).verdict == "4"
+    out = _gate_out({"unwarned_wait": "YES", "unclear": "NO", "incoherent": "NO"}, "10")
+    assert judge_criterion(C["c6_management"], MSGS, FakeLLM(out, out)).verdict == "7"
+
+
+def test_facts_find_unwarned_wait_and_ignore_bot_queue():
+    from app.guardrails import compute_facts
+    msgs = [{"speaker": "client", "text": "hi", "timestamp": "00:00"},
+            {"speaker": "operator", "text": "Hello", "timestamp": "05:00"},
+            {"speaker": "client", "text": "q", "timestamp": "05:10"},
+            {"speaker": "operator", "text": "a", "timestamp": "09:00"}]
+    f = " ".join(compute_facts(msgs))
+    assert "#2 -> #3: 230 s" in f and "#0" not in f.split("Waits")[1]
