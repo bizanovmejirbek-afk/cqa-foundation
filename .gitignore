@@ -1,24 +1,20 @@
-# Python
-__pycache__/
-*.py[cod]
-
-# Virtual environments
+# окружение и секреты
 .venv/
-venv/
-env/
-
-# Secrets
 .env
-.env.*
-!.env.example
-
-# IDE
 .idea/
-
-# Testing
+__pycache__/
 .pytest_cache/
-.coverage
 
-# System
-.DS_Store
-Thumbs.db
+# локальная база с оценками
+*.db
+*.db-wal
+*.db-shm
+
+# временные файлы контрольного часа и замеров
+control.json
+swap.json
+cost.csv
+*.zip
+
+# распакованные архивы старых версий
+cqa-foundation-v*/
